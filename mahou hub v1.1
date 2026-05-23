@@ -1,0 +1,378 @@
+-- すでに実行済みなら停止
+if game:GetService("CoreGui"):FindFirstChild("MahouHubLoaded") then
+	return
+end
+
+-- 実行フラグ
+local loadedFlag = Instance.new("BoolValue")
+loadedFlag.Name = "MahouHubLoaded"
+loadedFlag.Parent = game:GetService("CoreGui")
+
+-- 通知
+pcall(function()
+	game:GetService("StarterGui"):SetCore("SendNotification",{
+		Title = "mahou hub v1.1",
+		Text = "Loaded Successfully",
+		Duration = 5
+	})
+end)
+
+-- チャット（1回だけ）
+pcall(function()
+	game:GetService("TextChatService")
+	.TextChannels.RBXGeneral:SendAsync("mahou hub v1.1")
+end)
+
+-- Player
+local player = game:GetService("Players").LocalPlayer
+
+repeat task.wait()
+until player:FindFirstChild("PlayerGui")
+
+local playerGui = player.PlayerGui
+
+local UIS = game:GetService("UserInputService")
+local camera = workspace.CurrentCamera
+
+-- GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "FOV_GUI"
+gui.ResetOnSpawn = false
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = playerGui
+
+-- メイン（全体の枠）
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0,340,0,320) -- 高さを少し広げました
+frame.Position = UDim2.new(0.5,-170,0.5,-160)
+frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.Parent = gui
+
+Instance.new("UICorner",frame).CornerRadius = UDim.new(0,12)
+
+-- ×ボタン
+local close = Instance.new("TextButton")
+close.Size = UDim2.new(0,30,0,30)
+close.Position = UDim2.new(1,-35,0,5)
+close.BackgroundTransparency = 1
+close.Text = "×"
+close.Font = Enum.Font.GothamBold
+close.TextSize = 22
+close.TextColor3 = Color3.new(1,1,1)
+close.ZIndex = 3
+close.Parent = frame
+
+-- 開くボタン
+local open = Instance.new("TextButton")
+open.Size = UDim2.new(0,160,0,50)
+open.Position = UDim2.new(0.5,-80,0,2)
+open.BackgroundColor3 = Color3.fromRGB(35,35,35)
+open.Text = "Show Rayfield"
+open.Font = Enum.Font.GothamBold
+open.TextSize = 16
+open.TextColor3 = Color3.new(1,1,1)
+open.Visible = false
+open.Parent = gui
+
+Instance.new("UICorner",open).CornerRadius = UDim.new(1,0)
+
+-- タイトル
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0,40)
+title.BackgroundTransparency = 1
+title.Text = "mahou Hub v1.1"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+title.TextColor3 = Color3.new(1,1,1)
+title.ZIndex = 2
+title.Parent = frame
+
+--- スライド（スクロール）できるようにするためのコンテナ ---
+local scrollContainer = Instance.new("ScrollingFrame")
+scrollContainer.Size = UDim2.new(1, 0, 1, -75) -- タイトルと製作者クレジットの間のサイズ
+scrollContainer.Position = UDim2.new(0, 0, 0, 40)
+scrollContainer.BackgroundTransparency = 1
+scrollContainer.BorderSizePixel = 0
+scrollContainer.CanvasSize = UDim2.new(0, 0, 0, 260) -- スクロールできる中身の高さ
+scrollContainer.ScrollBarThickness = 4
+scrollContainer.ScrollBarImageColor3 = Color3.fromRGB(80,80,80)
+scrollContainer.Parent = frame
+
+-- Visual
+local visual = Instance.new("TextLabel")
+visual.Size = UDim2.new(1,-20,0,20)
+visual.Position = UDim2.new(0,10,0,8)
+visual.BackgroundTransparency = 1
+visual.Text = "Visual"
+visual.TextXAlignment = Enum.TextXAlignment.Left
+visual.Font = Enum.Font.Gotham
+visual.TextSize = 13
+visual.TextColor3 = Color3.fromRGB(170,170,170)
+visual.Parent = scrollContainer
+
+-- FOV文字
+local fovText = Instance.new("TextLabel")
+fovText.Size = UDim2.new(0,150,0,20)
+fovText.Position = UDim2.new(0,12,0,38)
+fovText.BackgroundTransparency = 1
+fovText.Text = "Field of View (FOV)"
+fovText.TextXAlignment = Enum.TextXAlignment.Left
+fovText.Font = Enum.Font.Gotham
+fovText.TextSize = 14
+fovText.TextColor3 = Color3.new(1,1,1)
+fovText.Parent = scrollContainer
+
+-- スライダー背景
+local sliderBg = Instance.new("Frame")
+sliderBg.Size = UDim2.new(0,170,0,20)
+sliderBg.Position = UDim2.new(1,-185,0,38)
+sliderBg.BackgroundColor3 = Color3.fromRGB(40,40,40)
+sliderBg.BorderSizePixel = 0
+sliderBg.Parent = scrollContainer
+
+Instance.new("UICorner",sliderBg).CornerRadius = UDim.new(1,0)
+
+-- 青部分
+local fill = Instance.new("Frame")
+fill.Size = UDim2.new(0.5,0,1,0)
+fill.BackgroundColor3 = Color3.fromRGB(0,120,255)
+fill.BorderSizePixel = 0
+fill.Parent = sliderBg
+
+Instance.new("UICorner",fill).CornerRadius = UDim.new(1,0)
+
+-- 丸
+local knob = Instance.new("Frame")
+knob.Size = UDim2.new(0,18,0,18)
+knob.Position = UDim2.new(0.5,-9,0.5,-9)
+knob.BackgroundColor3 = Color3.new(1,1,1)
+knob.BorderSizePixel = 0
+knob.Parent = sliderBg
+
+Instance.new("UICorner",knob).CornerRadius = UDim.new(1,0)
+
+-- 数字
+local valueLabel = Instance.new("TextLabel")
+valueLabel.Size = UDim2.new(1,0,1,0)
+valueLabel.BackgroundTransparency = 1
+valueLabel.Text = "95 Deg"
+valueLabel.Font = Enum.Font.GothamBold
+valueLabel.TextSize = 13
+valueLabel.TextColor3 = Color3.new(1,1,1)
+valueLabel.Parent = sliderBg
+
+-- 三人称テキスト
+local thirdText = Instance.new("TextLabel")
+thirdText.Size = UDim2.new(0,150,0,20)
+thirdText.Position = UDim2.new(0,12,0,72)
+thirdText.BackgroundTransparency = 1
+thirdText.Text = "Third Person"
+thirdText.TextXAlignment = Enum.TextXAlignment.Left
+thirdText.Font = Enum.Font.Gotham
+thirdText.TextSize = 14
+thirdText.TextColor3 = Color3.new(1,1,1)
+thirdText.Parent = scrollContainer
+
+-- 三人称ボタン
+local thirdButton = Instance.new("TextButton")
+thirdButton.Size = UDim2.new(0,90,0,28)
+thirdButton.Position = UDim2.new(1,-105,0,68)
+thirdButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
+thirdButton.BorderSizePixel = 0
+thirdButton.Text = "OFF"
+thirdButton.Font = Enum.Font.GothamBold
+thirdButton.TextSize = 13
+thirdButton.TextColor3 = Color3.new(1,1,1)
+thirdButton.Parent = scrollContainer -- 元のバグ(frame9)を修正
+
+Instance.new("UICorner",thirdButton).CornerRadius = UDim.new(1,0)
+
+-- 一回キル
+local killOnce = Instance.new("TextButton")
+killOnce.Size = UDim2.new(0,145,0,30)
+killOnce.Position = UDim2.new(0,12,0,110)
+killOnce.BackgroundColor3 = Color3.fromRGB(170,40,40)
+killOnce.BorderSizePixel = 0
+killOnce.Text = "Kill Once"
+killOnce.Font = Enum.Font.GothamBold
+killOnce.TextSize = 14
+killOnce.TextColor3 = Color3.new(1,1,1)
+killOnce.Parent = scrollContainer
+
+Instance.new("UICorner",killOnce).CornerRadius = UDim.new(0,8)
+
+-- ループキル
+local loopKill = Instance.new("TextButton")
+loopKill.Size = UDim2.new(0,145,0,30)
+loopKill.Position = UDim2.new(1,-157,0,110)
+loopKill.BackgroundColor3 = Color3.fromRGB(40,40,40)
+loopKill.BorderSizePixel = 0
+loopKill.Text = "Loop Kill OFF"
+loopKill.Font = Enum.Font.GothamBold
+loopKill.TextSize = 14
+loopKill.TextColor3 = Color3.new(1,1,1)
+loopKill.Parent = scrollContainer
+
+Instance.new("UICorner",loopKill).CornerRadius = UDim.new(0,8)
+
+-- Applyボタン
+local apply = Instance.new("TextButton")
+apply.Size = UDim2.new(0,150,0,30)
+apply.Position = UDim2.new(0.5,-75,0,160)
+apply.BackgroundColor3 = Color3.fromRGB(0,120,255)
+apply.BorderSizePixel = 0
+apply.Text = "Apply FOV"
+apply.Font = Enum.Font.GothamBold
+apply.TextSize = 14
+apply.TextColor3 = Color3.new(1,1,1)
+apply.Parent = scrollContainer
+
+Instance.new("UICorner",apply).CornerRadius = UDim.new(0,8)
+
+
+--- 「製作者 mahou」ラベル（タップ不可・固定位置） ---
+local creatorLabel = Instance.new("TextLabel")
+creatorLabel.Size = UDim2.new(1,0,0,30)
+creatorLabel.Position = UDim2.new(0,0,1,-35)
+creatorLabel.BackgroundTransparency = 1
+creatorLabel.Text = "製作者 mahou"
+creatorLabel.Font = Enum.Font.Gotham
+creatorLabel.TextSize = 13
+creatorLabel.TextColor3 = Color3.fromRGB(120,120,120) -- 控えめなグレー
+creatorLabel.Active = false -- タップ反応を無効化
+creatorLabel.Selectable = false
+-- UIをすり抜けてクリックできるように設定
+creatorLabel.Interactable = false 
+creatorLabel.Parent = frame
+
+
+-- ===== 処理 =====
+
+local MIN = 70
+local MAX = 120
+local dragging = false
+local selectedFov = 95
+local thirdPerson = false
+local loopKillEnabled = false
+
+local function updateSlider(x)
+	local percent = math.clamp(
+		(x - sliderBg.AbsolutePosition.X) / sliderBg.AbsoluteSize.X,
+		0,
+		1
+	)
+
+	fill.Size = UDim2.new(percent,0,1,0)
+	knob.Position = UDim2.new(percent,-9,0.5,-9)
+
+	selectedFov = math.floor(MIN + ((MAX - MIN) * percent))
+	valueLabel.Text = selectedFov .. " Deg"
+end
+
+-- スライド開始
+sliderBg.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+	or input.UserInputType == Enum.UserInputType.Touch then
+		
+		dragging = true
+		frame.Draggable = false
+		
+		updateSlider(input.Position.X)
+	end
+end)
+
+-- スライド中
+UIS.InputChanged:Connect(function(input)
+	if dragging then
+		if input.UserInputType == Enum.UserInputType.MouseMovement
+		or input.UserInputType == Enum.UserInputType.Touch then
+			
+			updateSlider(input.Position.X)
+		end
+	end
+end)
+
+-- 離した
+UIS.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+	or input.UserInputType == Enum.UserInputType.Touch then
+		
+		dragging = false
+		frame.Draggable = true
+	end
+end)
+
+-- Apply
+apply.MouseButton1Click:Connect(function()
+	camera.FieldOfView = selectedFov
+end)
+
+-- 三人称
+thirdButton.MouseButton1Click:Connect(function()
+	thirdPerson = not thirdPerson
+	
+	if thirdPerson then
+		thirdButton.Text = "ON"
+		thirdButton.BackgroundColor3 = Color3.fromRGB(0,120,255)
+
+		player.CameraMode = Enum.CameraMode.Classic
+		player.CameraMaxZoomDistance = 5000
+		player.CameraMinZoomDistance = 0
+	else
+		thirdButton.Text = "OFF"
+		thirdButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
+
+		player.CameraMode = Enum.CameraMode.LockFirstPerson
+	end
+end)
+
+-- 一回キル
+killOnce.MouseButton1Click:Connect(function()
+	local character = player.Character
+	
+	if character and character:FindFirstChild("Humanoid") then
+		character.Humanoid.Health = 0
+	end
+end)
+
+-- ループキル
+loopKill.MouseButton1Click:Connect(function()
+	loopKillEnabled = not loopKillEnabled
+	
+	if loopKillEnabled then
+		loopKill.Text = "Loop Kill ON"
+		loopKill.BackgroundColor3 = Color3.fromRGB(170,40,40)
+	else
+		loopKill.Text = "Loop Kill OFF"
+		loopKill.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	end
+end)
+
+-- ループ処理
+task.spawn(function()
+	while task.wait(1) do
+		if loopKillEnabled then
+			local character = player.Character
+			
+			if character and character:FindFirstChild("Humanoid") then
+				character.Humanoid.Health = 0
+			end
+		end
+	end
+end)
+
+-- 閉じる
+close.MouseButton1Click:Connect(function()
+	frame.Visible = false
+	open.Visible = true
+end)
+
+-- 開く
+open.MouseButton1Click:Connect(function()
+	frame.Visible = true
+	open.Visible = false
+end)
+
